@@ -1,0 +1,15 @@
+
+dist/
+
+node_modules/
+
+.env
+
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+
+.vscode/

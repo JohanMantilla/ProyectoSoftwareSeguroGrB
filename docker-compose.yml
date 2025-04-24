@@ -1,0 +1,114 @@
+networks:
+  softwareseguro_network:
+    driver: bridge
+
+services:
+  nats-server:
+    image: nats:latest
+    networks:
+      - softwareseguro_network
+    ports:
+      - 4222:4222
+
+  auth-ms:
+    depends_on:
+      - nats-server
+    build: ./auth-ms
+    volumes:
+      - ./auth-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    networks:
+      - softwareseguro_network
+    environment:
+      - PORT=3005
+      - NATS_SERVERS=${NATS_SERVERS}
+      - DATABASE_URL=${AUTH_DATABASE_URL}
+      - JWT_SECRET_ACCESS=${JWT_SECRET_ACCESS}
+      - JWT_SECRET_REFRESH=${JWT_SECRET_REFRESH}
+      - JWT_SECRET_RESET_PASSWORD=${JWT_SECRET_RESET_PASSWORD}
+
+  user-ms:
+    depends_on:
+      - nats-server
+    build: ./user-ms
+    volumes:
+      - ./user-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    networks:
+      - softwareseguro_network
+    environment:
+      - PORT=3004
+      - NATS_SERVERS=${NATS_SERVERS}
+      - DATABASE_URL=${USER_DATABASE_URL}
+
+  audit-ms:
+    depends_on:
+      - nats-server
+    build: ./audit-ms
+    volumes:
+      - ./audit-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    networks:
+      - softwareseguro_network
+    environment:
+      - PORT=3030
+      - NATS_SERVERS=${NATS_SERVERS}
+      - DATABASE_URL=${AUDIT_DATABASE_URL}
+
+  client-gateway:
+    depends_on:
+      - nats-server
+    build: ./client-gateway
+    ports:
+      - ${CLIENT_GATEWAY_PORT}:3002
+    volumes:
+      - ./client-gateway/src:/usr/src/app/src
+    command: npm run start:dev
+    networks:
+      - softwareseguro_network
+    environment:
+      - PORT=3002
+      - NATS_SERVERS=${NATS_SERVERS}
+      - NODE_ENV=${NODE_ENV}
+
+  personal-data-ms:
+   depends_on:
+     - nats-server
+   build: ./personal-data-ms
+   volumes:
+     - ./personal-data-ms/src:/usr/src/app/src
+   command: npm run start:dev
+   networks:
+     - softwareseguro_network
+   environment:
+     - PORT=3010
+     - NATS_SERVERS=${NATS_SERVERS}
+     - DATABASE_URL=${PERSONAL_DATABASE_URL}
+
+  consent-ms:
+   depends_on:
+     - nats-server
+   build: ./consent-ms
+   volumes:
+     - ./consent-ms/src:/usr/src/app/src
+   command: npm run start:dev
+   networks:
+     - softwareseguro_network
+   environment:
+     - PORT=3040
+     - NATS_SERVERS=${NATS_SERVERS}
+     - DATABASE_URL=${CONSENT_DATABASE_URL}
+
+  transparency-ms:
+   depends_on:
+     - nats-server
+   build: ./transparency-ms
+   volumes:
+     - ./transparency-ms/src:/usr/src/app/src
+   command: npm run start:dev
+   networks:
+     - softwareseguro_network
+   environment:
+     - PORT=3070
+     - NATS_SERVERS=${NATS_SERVERS}
+     - DATABASE_URL=${TRANSPARENCY_DATABASE_URL}

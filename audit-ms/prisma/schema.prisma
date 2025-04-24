@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo principal para registrar eventos de auditoría
+model AuditLog {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  evento         TipoEvento   // Tipo de acción auditada
+  usuarioId      String?       @db.ObjectId// Usuario que realizó la acción (si aplica)
+  entidadAfectada String      // Ej: "PersonalData", "Consent"
+  entidadId      String?       // ID del recurso afectado (Ej: personalDataId)
+  detalles       String         // Datos específicos del evento (Ej: campos modificados)
+  nivelRiesgo    NivelRiesgo? // Gravedad del evento (para incidentes de seguridad)
+  ipAddress      String?
+  createdAt      DateTime     @default(now())
+
+}
+
+enum TipoEvento {
+  ACCESO
+  MODIFICACION
+  ELIMINACION
+  VIOLACION_SEGURIDAD
+}
+
+enum NivelRiesgo {
+  BAJO
+  MEDIO
+  ALTO
+}

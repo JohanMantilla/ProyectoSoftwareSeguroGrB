@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Datos personales básicos
+model PersonalData {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  titularId     String   @db.ObjectId
+  name          String
+  email         String
+  documentNumber String?    // Número de identificación
+  purpose       String     // Finalidad del tratamiento
+  legalBasis    String     // Base legal para el tratamiento
+  retentionTime DateTime? // Tiempo de conservación
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([titularId])
+  @@index([email])
+}
+
+// Datos sensibles
+model SensitiveData {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  titularId     String       @db.ObjectId
+  tipo          TipoSensible
+  descripcion   String       // Campo cifrado
+  purpose       String       // Finalidad específica
+  legalBasis    String       // Base legal específica
+  retentionTime DateTime? // Tiempo de conservación
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([titularId])
+}
+
+// Solicitudes ARCO (Acceso, Rectificación, Cancelación, Oposición)
+model ArcoRequest {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  titularId     String      @db.ObjectId
+  tipo          TipoArco
+  status        ArcoStatus  @default(PENDING)
+  requestDate   DateTime    @default(now())
+  replyDate     DateTime?
+  rejectReason  String?
+
+  @@index([titularId])
+}
+
+// Registro de auditoría
+model AuditLog {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String      @db.ObjectId
+  dataType    DataType
+  action      AuditAction
+  changes     Json?
+  createdAt   DateTime    @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum TipoSensible {
+  SALUD
+  BIOMETRICO
+  GENETICO
+  IDEOLOGIA
+  RELIGION
+  ORIENTACION_SEXUAL
+  ETNIA
+}
+
+enum TipoArco {
+  ACCESO
+  RECTIFICACION
+  CANCELACION
+  OPOSICION
+}
+
+enum ArcoStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
+enum DataType {
+  PERSONAL_DATA
+  SENSITIVE_DATA
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+}

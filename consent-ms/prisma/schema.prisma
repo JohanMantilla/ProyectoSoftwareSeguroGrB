@@ -1,0 +1,73 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Consent {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  titularId        String            @db.ObjectId
+  finalidades      Finalidad[]       // Ahora usa un enum
+  baseLegal        BaseLegal
+  datosTratados    String[]
+  estado           EstadoConsent     @default(PENDIENTE)
+  fechaOtorgamiento DateTime         @default(now())
+  fechaAprobacion  DateTime?
+  fechaRevocacion  DateTime?
+  version          String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([titularId])
+  @@index([estado]) // Índice para consultas por estado
+  @@index([fechaOtorgamiento]) // Índice para consultas por fecha
+}
+
+model ConsentLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  consentId   String   @db.ObjectId
+  userId      String   @db.ObjectId
+  action      String   // Puede ser "CREATED", "REVOKED", "UPDATED", etc.
+  details     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([consentId])
+  @@index([userId])
+}
+
+enum BaseLegal {
+  CONSENTIMIENTO       // Art. 7.1
+  CONTRATO             // Art. 7.5
+  OBLIGACION_LEGAL     // Art. 7.2
+  INTERES_VITAL        // Art. 7.6
+  INTERES_PUBLICO      // Art. 7.4
+  INTERES_LEGITIMO     // Art. 7.8
+}
+
+enum EstadoConsent {
+  ACTIVO
+  REVOCADO             // Art. 8 (revocación)
+  PENDIENTE
+  RECHAZADO
+}
+
+enum Finalidad {
+  REGISTRO_AUTENTICACION
+  PRESTACION_SERVICIO
+  GESTION_PAGOS
+  SEGURIDAD_PREVENCION_FRAUDE
+  PUBLICIDAD_PERSONALIZADA
+  ANALISIS_MEJORA_SERVICIO
+  PERSONALIZACION_CONTENIDO
+  INTEGRACION_TERCEROS
+  CUMPLIMIENTO_LEGAL
+  GESTION_DERECHOS_USUARIO
+  ENVIO_NOTIFICACIONES
+  GESTION_SOPORTE_TECNICO
+}
